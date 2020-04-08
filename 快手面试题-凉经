@@ -1,0 +1,47 @@
+
+1.请找出以下代码的问题
+@interface homeViewControler : UIViewController
+{
+someManager *_manager;
+}
+@property (nonatomic, assign) NSNumber *flag;
+@property (nonatomic, strong) NSString *name;
+@property (nonatomic, strong) UIButton *button;
+@end
+@implementation homeViewControler
+- (void)viewDidLoad
+{
+self.button.onClick = ^{
+if (self.flag) {
+self.name = @"the name";
+[_manager reloadData:self.name];
+}
+else
+{
+self.name = nil;
+[_manager clearData];
+}
+};
+}
+@end
+答案：
+@property (nonatomic, assign) NSNumber *flag;//使用assign修饰属性代表一个指向对象的指针，会出现意想不到的原因。
+原因：assign只能修饰简单的数据类型，如果用assign修饰一个指针类型的property，那么这个property是不持有指向对象的，那么当这个指针指向某个对象时，
+这个对象的引用计数是不会改变的；指向对象在其他地方释放了这个property，那么这个property就有可能成为一个也指针，他指向的值就会发生意想不到的变化。
+总结：用assign属性修饰的property不应该持有一个对象。
+@property (nonatomic, strong) NSString *name;//总结：用strong修饰NSString类型会有什么问题？为什么需要用copy？
+原因1、因为父类指针可以指向子类对象，使用copy的目的是为了让本对象的属性不受外界影响，使用copy无论给我传入的是不可变的对象还是可变的对象，其本身就是一个
+不可变的副本，（和copy的本质有关）
+2、如果我们使用的是strong，那么这个属性就有可能指向一个可变对象，如果这个可变对象在外部被修改，那么会影响该属性。
+
+面试题2.请问以下代码输出多少？如果⽤__block修饰i⼜会输出多少？为什么？
+- (void)someMethod {
+int i = 10;
+dispatch_async(dispatch_get_main_queue(), ^{
+NSLog(@"%d",i);
+});
+i = 20;
+}
+总结：__block的作用是什么？为什么要用__block？
+答案：10  使用 __block修饰的i会输出20；
+原因：
